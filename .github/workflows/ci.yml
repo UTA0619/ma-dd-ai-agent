@@ -1,9 +1,11 @@
 name: CI — Lint & Test
+
 on:
   push:
     branches: [main, develop]
   pull_request:
     branches: [main]
+
 jobs:
   node-lint-test:
     name: Node.js Lint & Test
@@ -13,11 +15,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm ci --if-present
+      - name: Install dependencies (if package-lock.json exists)
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          elif [ -f package.json ]; then
+            npm install
+          else
+            echo "No package.json found, skipping npm install"
+          fi
       - run: npm run lint --if-present
       - run: npm test --if-present
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
   secret-scan:
     name: Secret Scan
     runs-on: ubuntu-latest
