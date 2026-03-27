@@ -1,0 +1,30 @@
+name: CI — Lint & Test
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+jobs:
+  node-lint-test:
+    name: Node.js Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --if-present
+      - run: npm run lint --if-present
+      - run: npm test --if-present
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          if grep -rE "sk-ant-[a-zA-Z0-9]+" --include="*.js" --include="*.py" --include="*.ts" .; then
+            echo "❌ APIキーがコードに含まれています！" && exit 1
+          fi
+          echo "✅ シークレットスキャン通過"
